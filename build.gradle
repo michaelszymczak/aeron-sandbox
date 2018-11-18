@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+    id 'application'
+    id "com.github.johnrengelman.shadow" version "4.0.2"
+}
+
+dependencies {
+    compile 'com.google.guava:guava:23.0'
+    compile group: 'io.aeron', name: 'aeron-samples', version: '1.11.3'
+
+    testCompile 'junit:junit:4.12'
+}
+
+repositories {
+    jcenter()
+}
+
+mainClassName = 'com.michaelszymczak.foo.App'
+sourceCompatibility = 1.8
+sourceCompatibility = 1.8
+version = "0.1"
+description = "Foo app"
+
