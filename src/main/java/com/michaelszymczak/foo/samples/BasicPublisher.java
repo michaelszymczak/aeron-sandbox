@@ -30,24 +30,27 @@ public class BasicPublisher
   private static final UnsafeBuffer BUFFER = new UnsafeBuffer(BufferUtil.allocateDirectAligned(256, 64));
 
   private final boolean embeddedMediaDriver;
+  private final String channel;
 
   public static void main(final String[] args) throws Exception
   {
-    new BasicPublisher(EMBEDDED_MEDIA_DRIVER).start();
+    new BasicPublisher(EMBEDDED_MEDIA_DRIVER, CHANNEL).start();
   }
 
-  public BasicPublisher(boolean embeddedMediaDriver) {
+  public BasicPublisher(boolean embeddedMediaDriver, String channel) {
     this.embeddedMediaDriver = embeddedMediaDriver;
+    this.channel = channel;
   }
 
   public void start() throws InterruptedException {
-    System.out.println("Publishing to " + CHANNEL + " on stream Id " + STREAM_ID);
+    System.out.println("Publishing to " + channel + " on stream Id " + STREAM_ID);
 
     // If configured to do so, create an embedded media driver within this application rather
     // than relying on an external one.
     final MediaDriver driver = embeddedMediaDriver ? MediaDriver.launchEmbedded() : null;
 
-    final Aeron.Context ctx = new Aeron.Context();
+    final Aeron.Context ctx = new Aeron.Context()
+            .driverTimeoutMs(1000);
     if (embeddedMediaDriver)
     {
       ctx.aeronDirectoryName(driver.aeronDirectoryName());
@@ -58,7 +61,7 @@ public class BasicPublisher
     // The Aeron and Publication classes implement "AutoCloseable" and will automatically
     // clean up resources when this try block is finished
     try (Aeron aeron = Aeron.connect(ctx);
-         Publication publication = aeron.addPublication(CHANNEL, STREAM_ID))
+         Publication publication = aeron.addPublication(channel, STREAM_ID))
     {
       for (long i = 0; i < NUMBER_OF_MESSAGES; i++)
       {
@@ -101,7 +104,7 @@ public class BasicPublisher
         }
         else
         {
-          System.out.println("yay!");
+          System.out.println("yay!, result + " + result);
         }
 
         if (!publication.isConnected())

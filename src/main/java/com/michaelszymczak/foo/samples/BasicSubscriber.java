@@ -31,23 +31,31 @@ public class BasicSubscriber
   private static final boolean EMBEDDED_MEDIA_DRIVER = SampleConfiguration.EMBEDDED_MEDIA_DRIVER;
 
   private final boolean embeddedMediaDriver;
+  private final String channel;
 
   public static void main(final String[] args)
   {
-    new BasicSubscriber(EMBEDDED_MEDIA_DRIVER).start();
+    new BasicSubscriber(EMBEDDED_MEDIA_DRIVER, CHANNEL).start();
   }
 
 
-  public BasicSubscriber(boolean embeddedMediaDriver) {
+  public BasicSubscriber(boolean embeddedMediaDriver, String channel) {
     this.embeddedMediaDriver = embeddedMediaDriver;
+    this.channel = channel;
   }
 
   public void start()
   {
-    System.out.println("Subscribing to " + CHANNEL + " on stream Id " + STREAM_ID);
+    start(new AtomicBoolean(true));
+  }
+
+  public void start(final AtomicBoolean running)
+  {
+    System.out.println("Subscribing to " + channel + " on stream Id " + STREAM_ID);
 
     final MediaDriver driver = embeddedMediaDriver ? MediaDriver.launchEmbedded() : null;
     final Aeron.Context ctx = new Aeron.Context()
+            .driverTimeoutMs(1000)
             .availableImageHandler(SamplesUtil::printAvailableImage)
             .unavailableImageHandler(SamplesUtil::printUnavailableImage);
 
@@ -57,7 +65,6 @@ public class BasicSubscriber
     }
 
     final FragmentHandler fragmentHandler = SamplesUtil.printStringMessage(STREAM_ID);
-    final AtomicBoolean running = new AtomicBoolean(true);
 
     // Register a SIGINT handler for graceful shutdown.
     SigInt.register(() -> running.set(false));
@@ -68,7 +75,7 @@ public class BasicSubscriber
     // The Aeron and Subscription classes implement "AutoCloseable" and will automatically
     // clean up resources when this try block is finished
     try (Aeron aeron = Aeron.connect(ctx);
-         Subscription subscription = aeron.addSubscription(CHANNEL, STREAM_ID))
+         Subscription subscription = aeron.addSubscription(channel, STREAM_ID))
     {
       SamplesUtil.subscriberLoop(fragmentHandler, FRAGMENT_COUNT_LIMIT, running).accept(subscription);
 
